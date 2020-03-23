@@ -12,8 +12,8 @@ import {
   CMSTabParagraphContainer,
   WindowRef,
 } from '@spartacus/core';
-import { combineLatest, Observable, Subscription } from 'rxjs';
-import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { ComponentWrapperDirective } from '../../../cms-structure/page/component/component-wrapper.directive';
 import { CmsComponentData } from '../../../cms-structure/page/model/index';
 
@@ -55,31 +55,30 @@ export class TabParagraphContainerComponent
     private winRef?: WindowRef
   ) {}
 
-  components$: Observable<any[]> = this.componentData.data$.pipe(
+  // todo: document breaking change - return observable with array of observables
+  components$: Observable<Observable<any>[]> = this.componentData.data$.pipe(
     distinctUntilChanged((x, y) => x?.components === y?.components),
-    switchMap(data =>
-      combineLatest(
-        (data?.components ?? '').split(' ').map(component =>
-          this.cmsService.getComponentData<any>(component).pipe(
-            distinctUntilChanged(),
-            map(tab => {
-              if (!tab) {
-                return undefined;
-              }
+    map(data =>
+      (data?.components ?? '').split(' ').map(component =>
+        this.cmsService.getComponentData<any>(component).pipe(
+          distinctUntilChanged(),
+          map(tab => {
+            if (!tab) {
+              return undefined;
+            }
 
-              if (!tab.flexType) {
-                tab = {
-                  ...tab,
-                  flexType: tab.typeCode,
-                };
-              }
-
-              return {
+            if (!tab.flexType) {
+              tab = {
                 ...tab,
-                title: `${data.uid}.tabs.${tab.uid}`,
+                flexType: tab.typeCode,
               };
-            })
-          )
+            }
+
+            return {
+              ...tab,
+              title: `${data.uid}.tabs.${tab.uid}`,
+            };
+          })
         )
       )
     )
