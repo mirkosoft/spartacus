@@ -10,6 +10,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import {
+  CmsComponentMapping,
   CmsService,
   ContentSlotComponentData,
   DynamicAttributeService,
@@ -51,20 +52,15 @@ export class ComponentWrapperDirective implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    if (
-      this.cmsMappingService.isComponentEnabled(
-        this.cxComponentWrapper.flexType
-      )
-    ) {
-      this.launchComponent();
-    }
+    this.cmsMappingService
+      .getComponentMapping(this.cxComponentWrapper.flexType)
+      .subscribe((componentMapping) => {
+        if (this.cmsMappingService.isComponentEnabled(componentMapping)) {
+          this.launchComponent(componentMapping);
+        }
+      });
   }
-
-  private launchComponent() {
-    const componentMapping = this.cmsMappingService.getComponentMapping(
-      this.cxComponentWrapper.flexType
-    );
-
+  private launchComponent(componentMapping: CmsComponentMapping) {
     if (!componentMapping) {
       return;
     }
@@ -74,7 +70,7 @@ export class ComponentWrapperDirective implements OnInit, OnDestroy {
         componentMapping,
         this.vcr,
         this.cmsInjector.getInjector(
-          this.cxComponentWrapper.flexType,
+          componentMapping,
           this.cxComponentWrapper.uid,
           this.injector
         )

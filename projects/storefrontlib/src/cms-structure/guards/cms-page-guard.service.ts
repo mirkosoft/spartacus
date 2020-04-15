@@ -15,11 +15,13 @@ import {
   switchMap,
   take,
   tap,
+  toArray,
   withLatestFrom,
 } from 'rxjs/operators';
 import { CmsGuardsService } from '../services/cms-guards.service';
 import { CmsI18nService } from '../services/cms-i18n.service';
 import { CmsRoutesService } from '../services/cms-routes.service';
+import { CmsMappingService } from '../services';
 
 /**
  * Helper service for `CmsPageGuard`
@@ -33,7 +35,8 @@ export class CmsPageGuardService {
     private cmsService: CmsService,
     private cmsRoutes: CmsRoutesService,
     private cmsI18n: CmsI18nService,
-    private cmsGuards: CmsGuardsService
+    private cmsGuards: CmsGuardsService,
+    private cmsMapping: CmsMappingService
   ) {}
 
   /**
@@ -61,21 +64,25 @@ export class CmsPageGuardService {
     return this.cmsService.getPageComponentTypes(pageContext).pipe(
       take(1),
       switchMap((componentTypes) =>
-        this.cmsGuards
-          .cmsPageCanActivate(componentTypes, route, state)
-          .pipe(withLatestFrom(of(componentTypes)))
+        this.cmsMapping.getMappings(componentTypes)
       ),
-      tap(([canActivate, componentTypes]) => {
+      toArray(),
+      switchMap((componentMappings) =>
+        this.cmsGuards
+          .cmsPageCanActivate(componentMappings, route, state)
+          .pipe(withLatestFrom(of(componentMappings)))
+      ),
+      tap(([canActivate, componentMappings]) => {
         if (canActivate === true) {
-          this.cmsI18n.loadForComponents(componentTypes);
+          this.cmsI18n.loadForComponents(componentMappings);
         }
       }),
-      map(([canActivate, componentTypes]) => {
+      map(([canActivate, componentMappings]) => {
         const pageLabel = pageData.label || pageContext.id; // for content pages the page label returned from backend can be different than ID initially assumed from route
         if (canActivate === true && !route?.data?.cxCmsRouteContext) {
           return this.cmsRoutes.handleCmsRoutesInGuard(
             pageContext,
-            componentTypes,
+            componentMappings,
             state.url,
             pageLabel
           );

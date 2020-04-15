@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PageContext } from '@spartacus/core';
+import { CmsComponentMapping, PageContext } from '@spartacus/core';
 import { CmsRoutesImplService } from './cms-routes-impl.service';
 
 // Public injection token for the private implementation of the service `CmsRoutesImplService`.
@@ -11,7 +11,7 @@ import { CmsRoutesImplService } from './cms-routes-impl.service';
 export abstract class CmsRoutesService {
   abstract handleCmsRoutesInGuard(
     pageContext: PageContext,
-    componentTypes: string[],
+    componentMappings: CmsComponentMapping[],
     currentUrl: string,
     currentPageLabel: string
   ): boolean;

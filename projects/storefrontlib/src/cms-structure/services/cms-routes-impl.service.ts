@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Route, Router } from '@angular/router';
-import { CmsRoute, PageContext, PageType } from '@spartacus/core';
+import {
+  CmsComponentMapping,
+  CmsRoute,
+  PageContext,
+  PageType,
+} from '@spartacus/core';
 import { PageLayoutComponent } from '../page/page-layout/page-layout.component';
 import { CmsMappingService } from './cms-mapping.service';
 
@@ -38,7 +43,7 @@ export class CmsRoutesImplService {
    */
   handleCmsRoutesInGuard(
     pageContext: PageContext,
-    componentTypes: string[],
+    componentMappings: CmsComponentMapping[],
     currentUrl: string,
     currentPageLabel: string
   ): boolean {
@@ -46,8 +51,8 @@ export class CmsRoutesImplService {
       return true;
     }
 
-    const componentRoutes = this.cmsMapping.getRoutesForComponents(
-      componentTypes
+    const componentRoutes = this.cmsMapping.getRoutesForMappings(
+      componentMappings
     );
     if (componentRoutes.length) {
       if (this.updateRouting(pageContext, currentPageLabel, componentRoutes)) {
